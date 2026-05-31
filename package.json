@@ -1,6 +1,6 @@
 {
-  "name": "olitech-ia-v3-profissional",
-  "version": "3.0.0",
+  "name": "olitech-ia-v3-1-corrigida",
+  "version": "3.1.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

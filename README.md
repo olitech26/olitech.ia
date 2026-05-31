@@ -1,23 +1,17 @@
-# OLITECH I.A V3 Profissional
+# OLITECH I.A V3.1 Corrigida
 
-Admin: olitech / 051309
+Correções:
+- Pesquisa volta a ser padrão.
+- Não imprime lixo/binário de anexos.
+- Anexo passa pelo backend.
+- Se Groq/OpenAI falhar, responde em modo local em vez de fetch failed.
+- Leitura PDF/DOCX/XLSX preparada.
 
-Recursos:
-- Pesquisa padrão
-- Chat sério e rápido com Groq
-- Criar sistemas, sites e códigos
-- Criar prompts/imagens, edição de imagem e roteiros de vídeo
-- Leitura real de PDF, DOCX e XLSX
-- Upload de arquivos
-- Usuários e permissões ampliadas
-- Mobile responsivo
+Admin:
+olitech / 051309
 
 Render:
 AI_PROVIDER=groq
-GROQ_API_KEY=sua_chave_groq
+GROQ_API_KEY=sua_chave
 GROQ_MODEL=llama-3.1-8b-instant
 ENABLE_WEB_SEARCH=true
-
-Imagem real:
-OPENAI_API_KEY=sua_chave_openai
-OPENAI_IMAGE_MODEL=gpt-image-1

@@ -1,0 +1,9 @@
+{
+  "appName": "OLITECH I.A V3",
+  "subtitle": "Pesquisa, sistemas, sites, imagens, vídeos, documentos e atendimento.",
+  "logoType": "url",
+  "logoText": "IA",
+  "logoUrl": "/assets/olitech-ia-logo.png",
+  "logoData": "",
+  "defaultMode": "pesquisa"
+}

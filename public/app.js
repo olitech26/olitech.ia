@@ -7,7 +7,56 @@ function showLogin(){$("loginScreen").classList.remove("hidden");$("appScreen").
 function updateUI(p){$("adminBar").classList.toggle("hidden",!(p.usuarios||p.configuracoes));$("usersBtn").style.display=p.usuarios?"block":"none";$("settingsBtn").style.display=p.configuracoes?"block":"none";[...$("mode").options].forEach(o=>o.disabled=o.value!=="rapido"&&!p[o.value]);if($("mode").selectedOptions[0]?.disabled)$("mode").value="pesquisa"}
 function scrollBottom(){$("chat").scrollTop=$("chat").scrollHeight}function linkify(t){let f=document.createDocumentFragment(),re=/(https?:\/\/[^\s<>"']+)/g,last=0,m;while((m=re.exec(t))){f.append(document.createTextNode(t.slice(last,m.index)));let a=document.createElement("a");a.href=m[0];a.textContent=m[0];a.target="_blank";a.rel="noopener noreferrer";a.className="auto-link";f.append(a);last=m.index+m[0].length}f.append(document.createTextNode(t.slice(last)));return f}
 function msg(t,w="ai"){let d=document.createElement("div");d.className="msg "+w;let b=document.createElement("div");b.className="bubble";w==="ai"?b.appendChild(linkify(String(t||""))):b.textContent=String(t||"");d.appendChild(b);$("chat").appendChild(d);scrollBottom();return b}
-function imageMsg(text,url,prompt){let b=msg(text,"ai");if(url){let img=document.createElement("img");img.src=url;img.alt=prompt||"Imagem gerada";img.className="generated-image";b.appendChild(document.createElement("br"));b.appendChild(img);let a=document.createElement("div");a.className="image-actions";a.innerHTML=`<a href="${url}" target="_blank" rel="noopener">Abrir imagem</a><a href="${url}" download="olitech-ia-imagem.png">Baixar</a>`;b.appendChild(a)}scrollBottom()}
+function imageMsg(text, url, prompt) {
+  let b = msg(text, "ai");
+
+  if (url) {
+    let img = document.createElement("img");
+
+    img.alt = prompt || "Imagem gerada";
+    img.className = "generated-image";
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "16px";
+    img.style.marginTop = "10px";
+    img.style.border = "1px solid rgba(255,255,255,.18)";
+    img.style.background = "#020814";
+
+    img.onload = () => {
+      console.log("Imagem carregada com sucesso");
+    };
+
+    img.onerror = () => {
+      img.alt = "A imagem ainda está processando. Clique em Abrir imagem.";
+      img.style.minHeight = "90px";
+    };
+
+    img.src = url + (url.includes("?") ? "&" : "?") + "cache=" + Date.now();
+
+    b.appendChild(document.createElement("br"));
+    b.appendChild(img);
+
+    let actions = document.createElement("div");
+    actions.className = "image-actions";
+
+    let open = document.createElement("a");
+    open.href = img.src;
+    open.target = "_blank";
+    open.rel = "noopener";
+    open.textContent = "Abrir imagem";
+
+    let down = document.createElement("a");
+    down.href = img.src;
+    down.download = "olitech-ia-imagem.png";
+    down.textContent = "Baixar";
+
+    actions.appendChild(open);
+    actions.appendChild(down);
+    b.appendChild(actions);
+  }
+
+  scrollBottom();
+  return b;
+}
 function fileToDataURL(file){return new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}async function readTextLocal(file){return await file.text().catch(()=>null)}
 function updateSelectedFiles(){let box=$("selectedFiles");if(!box)return;let files=[...$("fileInput").files];box.innerHTML="";box.classList.toggle("hidden",files.length===0);files.forEach(f=>{let c=document.createElement("span");c.className="file-chip";c.textContent=`📎 ${f.name}`;box.appendChild(c)})}
 function wantsImage(text,mode){let t=String(text||"").toLowerCase();return mode==="imagem"||mode==="editarImagem"||/(crie|criar|gere|gerar|faça|faca|edite|editar|melhore|melhorar|monte|montar).{0,70}(imagem|foto|arte|banner|story|stories|propaganda|post|logo|capa)|\b(imagem|foto|arte|banner|story|stories|propaganda|post|logo|capa|por do sol)\b/.test(t)}

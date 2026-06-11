@@ -1,0 +1,27 @@
+[
+  {
+    "id": "admin_olitech",
+    "username": "olitech",
+    "password": "051309",
+    "name": "Olitech Admin",
+    "role": "admin",
+    "active": true,
+    "permissions": {
+      "chat": true,
+      "pesquisa": true,
+      "tecnico": true,
+      "atendimento": true,
+      "programador": true,
+      "marketing": true,
+      "usuarios": true,
+      "configuracoes": true,
+      "imagem": true,
+      "editarImagem": true,
+      "video": true,
+      "documentos": true,
+      "sites": true,
+      "codigo": true,
+      "arquivos": true
+    }
+  }
+]

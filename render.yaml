@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: olitech-ia-cloud
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: ENABLE_WEB_SEARCH
+        value: true

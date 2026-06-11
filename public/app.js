@@ -2,68 +2,47 @@ const $=id=>document.getElementById(id);let settings={},permissionKeys=[],roleDe
 function token(){return localStorage.getItem("olitech_token")||""}function setToken(t){localStorage.setItem("olitech_token",t)}function clearToken(){localStorage.removeItem("olitech_token")}
 async function api(u,o={},retry=true){let h={"Content-Type":"application/json",...(o.headers||{})};if(token())h.Authorization="Bearer "+token();let r;try{r=await fetch(u,{...o,headers:h})}catch{throw Error("Falha de conexão. Aguarde o Render acordar.")}let d=await r.json().catch(()=>({}));if(r.status===401&&retry&&u!=="/api/login"){try{let rr=await fetch("/api/session/repair",{method:"POST",headers:{"Content-Type":"application/json"}}),dd=await rr.json().catch(()=>({}));if(rr.ok&&dd.token){setToken(dd.token);return api(u,o,false)}}catch(e){}}if(!r.ok)throw Error(d.error||"Erro inesperado");return d}
 function setLogo(e,s){if(!e)return;e.innerHTML="";let src=s.logoType==="local"?s.logoData:s.logoType==="url"?s.logoUrl:"";if(src){let i=document.createElement("img");i.src=src;i.onerror=()=>e.textContent=s.logoText||"IA";e.appendChild(i)}else e.textContent=s.logoText||"IA"}
-function applySettings(s={}){settings=s;document.querySelectorAll("[data-app-name]").forEach(e=>e.textContent=s.appName||"OLITECH I.A V5");if($("subtitle"))$("subtitle").textContent=s.subtitle||"";if($("mode"))$("mode").value=s.defaultMode||"pesquisa";document.querySelectorAll("[data-logo]").forEach(e=>setLogo(e,s));if($("logoPreview"))setLogo($("logoPreview"),s)}
+function applySettings(s={}){settings=s;document.querySelectorAll("[data-app-name]").forEach(e=>e.textContent=s.appName||"OLITECH I.A V5.1.1");if($("subtitle"))$("subtitle").textContent=s.subtitle||"";if($("mode"))$("mode").value=s.defaultMode||"pesquisa";document.querySelectorAll("[data-logo]").forEach(e=>setLogo(e,s));if($("logoPreview"))setLogo($("logoPreview"),s)}
 function showLogin(){$("loginScreen").classList.remove("hidden");$("appScreen").classList.add("hidden")}function showApp(u){$("loginScreen").classList.add("hidden");$("appScreen").classList.remove("hidden");$("userInfo").textContent=`${u.name} • ${u.role}`;updateUI(u.permissions||{})}
 function updateUI(p){$("adminBar").classList.toggle("hidden",!(p.usuarios||p.configuracoes));$("usersBtn").style.display=p.usuarios?"block":"none";$("settingsBtn").style.display=p.configuracoes?"block":"none";[...$("mode").options].forEach(o=>o.disabled=o.value!=="rapido"&&!p[o.value]);if($("mode").selectedOptions[0]?.disabled)$("mode").value="pesquisa"}
 function scrollBottom(){$("chat").scrollTop=$("chat").scrollHeight}function linkify(t){let f=document.createDocumentFragment(),re=/(https?:\/\/[^\s<>"']+)/g,last=0,m;while((m=re.exec(t))){f.append(document.createTextNode(t.slice(last,m.index)));let a=document.createElement("a");a.href=m[0];a.textContent=m[0];a.target="_blank";a.rel="noopener noreferrer";a.className="auto-link";f.append(a);last=m.index+m[0].length}f.append(document.createTextNode(t.slice(last)));return f}
 function msg(t,w="ai"){let d=document.createElement("div");d.className="msg "+w;let b=document.createElement("div");b.className="bubble";w==="ai"?b.appendChild(linkify(String(t||""))):b.textContent=String(t||"");d.appendChild(b);$("chat").appendChild(d);scrollBottom();return b}
-function imageMsg(text, url, prompt) {
-  let b = msg(text, "ai");
-
-  if (url) {
-    let img = document.createElement("img");
-
-    img.alt = prompt || "Imagem gerada";
-    img.className = "generated-image";
-    img.style.maxWidth = "100%";
-    img.style.borderRadius = "16px";
-    img.style.marginTop = "10px";
-    img.style.border = "1px solid rgba(255,255,255,.18)";
-    img.style.background = "#020814";
-
-    img.onload = () => {
-      console.log("Imagem carregada com sucesso");
-    };
-
-    img.onerror = () => {
-      img.alt = "A imagem ainda está processando. Clique em Abrir imagem.";
-      img.style.minHeight = "90px";
-    };
-
-    img.src = url + (url.includes("?") ? "&" : "?") + "cache=" + Date.now();
-
+function imageMsg(text,url,prompt){
+  let b=msg(text,"ai");
+  if(url){
+    let img=document.createElement("img");
+    img.alt=prompt||"Imagem gerada";
+    img.className="generated-image";
+    img.style.maxWidth="100%";
+    img.style.borderRadius="16px";
+    img.style.marginTop="10px";
+    img.style.border="1px solid rgba(255,255,255,.18)";
+    img.style.background="#020814";
+    img.src=url;
     b.appendChild(document.createElement("br"));
     b.appendChild(img);
-
-    let actions = document.createElement("div");
-    actions.className = "image-actions";
-
-    let open = document.createElement("a");
-    open.href = img.src;
-    open.target = "_blank";
-    open.rel = "noopener";
-    open.textContent = "Abrir imagem";
-
-    let down = document.createElement("a");
-    down.href = img.src;
-    down.download = "olitech-ia-imagem.png";
-    down.textContent = "Baixar";
-
-    actions.appendChild(open);
-    actions.appendChild(down);
-    b.appendChild(actions);
+    let a=document.createElement("div");
+    a.className="image-actions";
+    let open=document.createElement("a");
+    open.href=url;
+    open.target="_blank";
+    open.rel="noopener";
+    open.textContent="Abrir imagem";
+    let down=document.createElement("a");
+    down.href=url;
+    down.download="olitech-ia-imagem.png";
+    down.textContent="Baixar";
+    a.appendChild(open);a.appendChild(down);b.appendChild(a);
   }
-
   scrollBottom();
-  return b;
 }
 function fileToDataURL(file){return new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}async function readTextLocal(file){return await file.text().catch(()=>null)}
 function updateSelectedFiles(){let box=$("selectedFiles");if(!box)return;let files=[...$("fileInput").files];box.innerHTML="";box.classList.toggle("hidden",files.length===0);files.forEach(f=>{let c=document.createElement("span");c.className="file-chip";c.textContent=`📎 ${f.name}`;box.appendChild(c)})}
 function wantsImage(text,mode){let t=String(text||"").toLowerCase();return mode==="imagem"||mode==="editarImagem"||/(crie|criar|gere|gerar|faça|faca|edite|editar|melhore|melhorar|monte|montar).{0,70}(imagem|foto|arte|banner|story|stories|propaganda|post|logo|capa)|\b(imagem|foto|arte|banner|story|stories|propaganda|post|logo|capa|por do sol)\b/.test(t)}
 async function readFiles(){let files=[...$("fileInput").files];if(!files.length)return"";attachedImages=[];let out=[];for(let x of files){if(x.size>10000000){out.push(`[${x.name}: limite 10MB]`);continue}let lower=x.name.toLowerCase();if(x.type.startsWith("image/")){try{let data=await fileToDataURL(x);attachedImages.push({name:x.name,mime:x.type,data});out.push(`[Imagem anexada: ${x.name}]`)}catch(e){out.push(`[Erro ao anexar ${x.name}]`)}continue}if(/\.(txt|csv|json|log|md|html|css|js|xml)$/i.test(lower)){let text=await readTextLocal(x);out.push(text?`Arquivo ${x.name}:\n${text.slice(0,20000)}`:`[Não consegui ler ${x.name}]`);continue}try{let data=await fileToDataURL(x),d=await api("/api/tools/analyze-file",{method:"POST",body:JSON.stringify({name:x.name,mime:x.type,data})});out.push(d.ok?`Arquivo ${x.name}:\n${String(d.text||"").slice(0,20000)}`:`[${x.name}: ${d.error}]`)}catch(e){out.push(`[${x.name}: ${e.message}]`)}}return out.join("\n\n")}
 async function analyzeImages(prompt){if(!attachedImages.length)return"";try{let d=await api("/api/tools/vision",{method:"POST",body:JSON.stringify({prompt,images:attachedImages})});return d.answer?`\n\nAnálise visual Gemini:\n${d.answer}`:""}catch(e){return`\n\n[Não consegui analisar imagem: ${e.message}]`}}
-async function check(){try{if(!token()){showLogin();return}let d=await api("/api/me",{},false);applySettings(d.settings||{});if(d.user){showApp(d.user);return}clearToken();showLogin()}catch(e){clearToken();showLogin()}}
-$("loginForm").onsubmit=async e=>{e.preventDefault();$("loginError").textContent="";clearToken();let username=$("username").value.trim(),password=$("password").value;try{let d=await api("/api/login",{method:"POST",body:JSON.stringify({username,password})},false);setToken(d.token);applySettings(d.settings);showApp(d.user);$("chat").innerHTML="";msg("Olá! Eu sou a OLITECH I.A V5. Como posso ajudar?")}catch(err){$("loginError").textContent=err.message}}
+async function check(){clearToken();showLogin()}
+$("loginForm").onsubmit=async e=>{e.preventDefault();$("loginError").textContent="";clearToken();let username=$("username").value.trim(),password=$("password").value;try{let d=await api("/api/login",{method:"POST",body:JSON.stringify({username,password})},false);setToken(d.token);applySettings(d.settings);showApp(d.user);$("chat").innerHTML="";msg("Olá! Eu sou a OLITECH I.A V5.1.1. Como posso ajudar?")}catch(err){$("loginError").textContent=err.message}}
 $("logoutBtn").onclick=async()=>{try{await api("/api/logout",{method:"POST"})}catch{}clearToken();showLogin()};$("newChatBtn").onclick=()=>{$("chat").innerHTML="";msg("Novo chat iniciado. Como posso ajudar?");closeSidebar()};$("menuBtn").onclick=()=>openSidebar();$("overlay").onclick=()=>closeSidebar();function openSidebar(){$("sidebar").classList.add("open");$("overlay").classList.remove("hidden")}function closeSidebar(){$("sidebar").classList.remove("open");$("overlay").classList.add("hidden")}
 $("fileInput").addEventListener("change",updateSelectedFiles);$("message").addEventListener("input",e=>{e.target.style.height="44px";e.target.style.height=Math.min(e.target.scrollHeight,135)+"px"});
 async function generateImage(prompt){let loading=msg("Gerando imagem gratuita...");try{let d=await api("/api/tools/image",{method:"POST",body:JSON.stringify({prompt,images:attachedImages||[]})});loading.remove();if(d.imageUrl)return imageMsg(d.message||"Imagem gerada.",d.imageUrl,d.prompt);msg(d.message||"Não consegui gerar imagem.")}catch(err){loading.textContent="Erro ao gerar imagem: "+err.message}}

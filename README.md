@@ -1,9 +1,15 @@
-# OLITECH I.A V5 Estável
+# OLITECH I.A V5.1 Limpa
 
-- Gemini para chat, pesquisa e análise de imagens.
-- Pollinations AI para gerar imagens reais gratuitamente.
-- Não usa Gemini Image, OpenAI ou faturamento.
-- Login: olitech / 051309
+Correções:
+- Versionamento unificado em V5.1.
+- Sempre pede login ao abrir/recarregar.
+- Remove auto-login.
+- Imagem é carregada no backend e enviada para o chat como base64/dataURL.
+- Não abre JSON/código em nova aba.
+- Se Pollinations estiver em fila, mostra erro claro no chat.
+
+Login:
+olitech / 051309
 
 Render:
 AI_PROVIDER=gemini

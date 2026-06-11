@@ -1,6 +1,6 @@
 {
-  "name": "olitech-ia-v5-1-limpa",
-  "version": "5.1.0",
+  "name": "olitech-ia-v5-2-sem-fila-imagem",
+  "version": "5.2.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

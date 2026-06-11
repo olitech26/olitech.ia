@@ -1,12 +1,10 @@
-# OLITECH I.A V5.1 Limpa
+# OLITECH I.A V5.2 Sem Fila
 
-Correções:
-- Versionamento unificado em V5.1.
-- Sempre pede login ao abrir/recarregar.
-- Remove auto-login.
-- Imagem é carregada no backend e enviada para o chat como base64/dataURL.
-- Não abre JSON/código em nova aba.
-- Se Pollinations estiver em fila, mostra erro claro no chat.
+Correção:
+- Nunca fica apenas em mensagem de espera.
+- Se Pollinations estiver em fila/ocupado, gera uma imagem SVG local imediatamente no chat.
+- Versão unificada V5.2.
+- Login obrigatório ao abrir.
 
 Login:
 olitech / 051309

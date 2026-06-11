@@ -41,9 +41,9 @@ function ensureAdminUser(){
 }
 function users(){ensureAdminUser();let us=rj(USERS,[]).map(norm);wj(USERS,us);return us}
 function settings(){
- let s=rj(SETTINGS,{appName:"OLITECH I.A V5.2",subtitle:"Gemini, pesquisa, arquivos, imagens instantâneas, sistemas, sites e atendimento.",logoType:"url",logoText:"IA",logoUrl:"/assets/olitech-ia-logo.png",logoData:"",defaultMode:"pesquisa"});
- s.appName="OLITECH I.A V5.2";
- s.subtitle="Gemini, pesquisa, arquivos, imagens instantâneas, sistemas, sites e atendimento.";
+ let s=rj(SETTINGS,{appName:"OLITECH I.A V5.3",subtitle:"Gemini, pesquisa, imagens relacionadas, arquivos, sistemas, sites e atendimento.",logoType:"url",logoText:"IA",logoUrl:"/assets/olitech-ia-logo.png",logoData:"",defaultMode:"pesquisa"});
+ s.appName="OLITECH I.A V5.3";
+ s.subtitle="Gemini, pesquisa, imagens relacionadas, arquivos, sistemas, sites e atendimento.";
  if(!validMode(s.defaultMode)||s.defaultMode==="imagem")s.defaultMode="pesquisa";
  return s
 }
@@ -101,7 +101,7 @@ app.delete("/api/users/:id",auth,perm("usuarios"),(req,res)=>{if(req.user.id===r
 app.get("/api/settings",auth,(req,res)=>res.json({settings:settings()}));
 app.put("/api/settings",auth,perm("configuracoes"),(req,res)=>{let c=settings(),b=req.body||{},mode=String((b.defaultMode??c.defaultMode??"pesquisa"));if(!validMode(mode)||mode==="imagem")mode="pesquisa";let s={appName:String(b.appName??c.appName).slice(0,80),subtitle:String(b.subtitle??c.subtitle).slice(0,180),logoType:["text","url","local"].includes(b.logoType)?b.logoType:c.logoType,logoText:String(b.logoText??c.logoText).slice(0,10),logoUrl:String(b.logoUrl??c.logoUrl).slice(0,600),logoData:String(b.logoData??c.logoData).slice(0,8000000),defaultMode:mode};wj(SETTINGS,s);res.json({ok:true,settings:s})});
 
-app.post("/api/chat",auth,perm("chat"),async(req,res)=>{try{let{message,mode}=req.body||{};if(!message)return res.status(400).json({error:"Mensagem vazia"});mode=mode||settings().defaultMode||"pesquisa";if(!validMode(mode))mode="pesquisa";if(mode!=="rapido"&&!has(req.user,mode))return res.status(403).json({error:"Sem permissão para "+mode});let search="",err="",need=mode==="pesquisa"||/pesquis|clima|chuva|chover|tempo|preço|valor|hoje|atual|site|sistema|imagem|código|codigo|video|documento/i.test(message);if(need&&has(req.user,"pesquisa")){let r=await webSearch(String(message));search=r.text;err=r.error}let p=rj(PROMPTS,{}),k=rt(KNOWLEDGE),sys=`${p.base||"Você é a OLITECH I.A V5.2."}\n${p[mode]||""}\nBase:${k}\nPesquisa:${search||"nenhuma"}\nErro:${err||"nenhum"}`;let answer=await callAI(sys,String(message),{searchText:search,searchError:err});res.json({answer,usedSearch:!!search,searchError:err})}catch(e){res.json({answer:"Erro técnico tratado: "+e.message,usedSearch:false,searchError:e.message})}});
+app.post("/api/chat",auth,perm("chat"),async(req,res)=>{try{let{message,mode}=req.body||{};if(!message)return res.status(400).json({error:"Mensagem vazia"});mode=mode||settings().defaultMode||"pesquisa";if(!validMode(mode))mode="pesquisa";if(mode!=="rapido"&&!has(req.user,mode))return res.status(403).json({error:"Sem permissão para "+mode});let search="",err="",need=mode==="pesquisa"||/pesquis|clima|chuva|chover|tempo|preço|valor|hoje|atual|site|sistema|imagem|código|codigo|video|documento/i.test(message);if(need&&has(req.user,"pesquisa")){let r=await webSearch(String(message));search=r.text;err=r.error}let p=rj(PROMPTS,{}),k=rt(KNOWLEDGE),sys=`${p.base||"Você é a OLITECH I.A V5.3."}\n${p[mode]||""}\nBase:${k}\nPesquisa:${search||"nenhuma"}\nErro:${err||"nenhum"}`;let answer=await callAI(sys,String(message),{searchText:search,searchError:err});res.json({answer,usedSearch:!!search,searchError:err})}catch(e){res.json({answer:"Erro técnico tratado: "+e.message,usedSearch:false,searchError:e.message})}});
 
 app.post("/api/tools/analyze-file",auth,perm("arquivos"),async(req,res)=>{try{let{name,mime,data}=req.body||{};if(!data)return res.status(400).json({error:"Arquivo vazio."});let buf=Buffer.from(String(data).split(",").pop(),"base64"),text="",lower=String(name||"").toLowerCase();if(lower.match(/\.(png|jpg|jpeg|webp|gif)$/))return res.json({ok:true,name,mime,text:`Imagem anexada: ${name}.`});if(lower.endsWith(".pdf")){if(!pdfParse)return res.json({ok:false,error:"Leitor PDF não instalado."});let p=await pdfParse(buf);text=p.text||""}else if(lower.endsWith(".docx")){if(!mammoth)return res.json({ok:false,error:"Leitor DOCX não instalado."});let r=await mammoth.extractRawText({buffer:buf});text=r.value||""}else if(lower.endsWith(".xlsx")||lower.endsWith(".xls")){if(!XLSX)return res.json({ok:false,error:"Leitor XLSX não instalado."});let wb=XLSX.read(buf,{type:"buffer"});text=wb.SheetNames.map(s=>"# "+s+"\n"+XLSX.utils.sheet_to_csv(wb.Sheets[s])).join("\n\n")}else{text=buf.toString("utf8").replace(/[^\x09\x0A\x0D\x20-\x7EÀ-ÿ]/g," ").replace(/\s{3,}/g," ")}res.json({ok:true,name,mime,text:text.slice(0,50000)})}catch(e){res.status(200).json({ok:false,error:e.message})}});
 
@@ -172,6 +172,40 @@ function makeInstantLocalImage(prompt,opt={}){
  return "data:image/svg+xml;base64,"+Buffer.from(svg,"utf8").toString("base64");
 }
 
+
+function cleanImageSearchQuery(q){
+  return String(q||"").replace(/\b(imagens|imagem|fotos|foto|figuras)\b/gi," ").replace(/\b(de|do|da|dos|das|sobre|relacionadas|relacionada|em|no|na)\b/gi," ").replace(/\s+/g," ").trim();
+}
+function wantsImageSearchText(text,mode){
+  const t=String(text||"").toLowerCase();
+  if(mode==="imagem"||mode==="editarImagem")return false;
+  if(/\b(crie|criar|gere|gerar|faça|faca|desenhe|monte|edite|editar)\b/.test(t))return false;
+  return /\b(imagens|imagem|fotos|foto)\b/.test(t);
+}
+async function searchWikimediaImages(query){
+  const q=cleanImageSearchQuery(query)||String(query||"");
+  const api="https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=14&gsrsearch="+encodeURIComponent(q)+"&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900&format=json&origin=*";
+  const r=await fetch(api,{headers:{"user-agent":"OlitechIA/5.3"},signal:AbortSignal.timeout(12000)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error("Erro Wikimedia");
+  return Object.values(d.query?.pages||{}).map(p=>{
+    const ii=p.imageinfo?.[0]||{}, meta=ii.extmetadata||{};
+    return {title:String(p.title||"").replace(/^File:/,""),imageUrl:ii.thumburl||ii.url,pageUrl:"https://commons.wikimedia.org/wiki/"+encodeURIComponent(p.title||""),source:"Wikimedia Commons",license:meta.LicenseShortName?.value||""}
+  }).filter(x=>x.imageUrl&&/\.(jpg|jpeg|png|webp)(\?|$)/i.test(x.imageUrl)).slice(0,8);
+}
+
+
+app.post("/api/tools/image-search",auth,perm("pesquisa"),async(req,res)=>{
+  try{
+    const {query}=req.body||{};
+    const clean=cleanImageSearchQuery(query);
+    let images=[];
+    try{images=await searchWikimediaImages(clean||query)}catch(e){console.log("image search falhou:",e.message)}
+    if(images.length)return res.json({ok:true,query:clean||query,images,message:`Encontrei ${images.length} imagens relacionadas.`});
+    return res.json({ok:false,query:clean||query,images:[],message:"Não encontrei imagens abertas relacionadas. Tente especificar melhor o local ou assunto."});
+  }catch(e){return res.json({ok:false,error:e.message,images:[],message:"Não consegui pesquisar imagens agora."})}
+});
+
 app.post("/api/tools/image",auth,perm("imagem"),async(req,res)=>{
  try{
    const{prompt,width,height,images}=req.body||{};
@@ -203,6 +237,6 @@ app.use("/exports",express.static(EXPORTS));
 
 async function webSearch(q){if(/clima|chuva|chover|tempo/i.test(q)){try{let city=q.replace(/vai chover|chover|chuva|hoje|clima|tempo|\?/gi," ").trim()||"Ibitinga SP",rr=await fetch("https://wttr.in/"+encodeURIComponent(city)+"?format=j1",{signal:AbortSignal.timeout(10000)});if(rr.ok){let d=await rr.json(),c=d.current_condition?.[0]||{},t=d.weather?.[0]||{};return{text:`Fonte wttr.in ${city}: ${c.temp_C||"?"}°C, máxima ${t.maxtempC||"?"}°C, mínima ${t.mintempC||"?"}°C.`,error:""}}}catch(e){return{text:"",error:e.message}}}try{let r=await fetch("https://api.duckduckgo.com/?q="+encodeURIComponent(q)+"&format=json&no_html=1&skip_disambig=1",{signal:AbortSignal.timeout(9000)});if(r.ok){let d=await r.json(),out=[];if(d.AbstractText)out.push(d.AbstractText+"\nFonte: "+(d.AbstractURL||"DuckDuckGo"));(d.RelatedTopics||[]).slice(0,5).forEach(x=>{if(x.Text)out.push(x.Text+"\nFonte: "+(x.FirstURL||""))});if(out.length)return{text:out.join("\n\n"),error:""}}}catch(e){return{text:"",error:e.message}}return{text:"",error:"Pesquisa externa sem resultado útil."}}
 async function callAI(sys,msg,meta){if(hasGeminiKey()){try{let g=await callGeminiText(sys,msg);if(g)return g}catch(e){console.log("Gemini fallback:",e.message)}}if(process.env.GROQ_API_KEY){try{let r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+process.env.GROQ_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.GROQ_MODEL||"llama-3.1-8b-instant",messages:[{role:"system",content:sys},{role:"user",content:msg}],temperature:.35}),signal:AbortSignal.timeout(30000)});let d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error?.message||"Erro Groq");return d.choices?.[0]?.message?.content||"Sem resposta."}catch(e){return `Não consegui acessar Gemini/Groq agora (${e.message}).\n\n${localAnswer(msg,meta)}`}}return localAnswer(msg,meta)}
-function localAnswer(msg,meta){return`OLITECH I.A V5.2 - modo local\n\nRecebi:\n${msg}\n\n${meta?.searchText?("Pesquisa externa:\n"+meta.searchText):"Para respostas completas, configure GEMINI_API_KEY no Render."}`}
+function localAnswer(msg,meta){return`OLITECH I.A V5.3 - modo local\n\nRecebi:\n${msg}\n\n${meta?.searchText?("Pesquisa externa:\n"+meta.searchText):"Para respostas completas, configure GEMINI_API_KEY no Render."}`}
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
-app.listen(PORT,()=>console.log("OLITECH I.A V5.2 estável online porta "+PORT));
+app.listen(PORT,()=>console.log("OLITECH I.A V5.3 estável online porta "+PORT));

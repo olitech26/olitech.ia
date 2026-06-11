@@ -73,10 +73,14 @@ async function callGeminiVision(prompt,images){
  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error?.message||"Erro Gemini Vision");
  return d.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim()||null;
 }
-function buildPollinationsUrl(prompt,opt={}){
- const width=Number(opt.width||1024),height=Number(opt.height||1024),seed=Math.floor(Math.random()*9999999);
- const enhanced=`high quality professional image, realistic, clean composition, detailed, ${String(prompt||"imagem profissional").trim()}`;
- return `https://image.pollinations.ai/prompt/${encodeURIComponent(enhanced)}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&safe=true`;
+function buildPollinationsUrl(prompt, opt = {}) {
+  const width = Number(opt.width || 1024);
+  const height = Number(opt.height || 1024);
+  const seed = Math.floor(Math.random() * 9999999);
+
+  const finalPrompt = `high quality professional image, realistic, clean composition, detailed, ${String(prompt || "imagem profissional").trim()}`;
+
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&safe=true&model=flux`;
 }
 
 app.get("/api/health",(req,res)=>res.json({ok:true,version:"v5-estavel"}));
@@ -101,7 +105,54 @@ app.post("/api/tools/analyze-file",auth,perm("arquivos"),async(req,res)=>{try{le
 
 app.post("/api/tools/vision",auth,perm("arquivos"),async(req,res)=>{try{const{prompt,images}=req.body||{};if(!images||!images.length)return res.status(400).json({error:"Nenhuma imagem enviada."});if(hasGeminiKey()){const answer=await callGeminiVision(prompt||"Analise esta imagem de forma profissional.",images);return res.json({ok:true,answer})}return res.json({ok:true,answer:"Imagem recebida. Para análise visual real, configure GEMINI_API_KEY no Render."})}catch(e){return res.json({ok:false,error:e.message,answer:"Não consegui analisar a imagem agora."})}});
 
-app.post("/api/tools/image",auth,perm("imagem"),async(req,res)=>{try{const{prompt,width,height,images}=req.body||{};let userPrompt=String(prompt||"Crie uma imagem profissional.").trim();if(images&&images.length)userPrompt=`Crie/edite uma nova imagem profissional baseada na imagem de referência enviada. Pedido: ${userPrompt}. Não coloque o prompt escrito na imagem.`;let lower=userPrompt.toLowerCase(),w=Number(width||1024),h=Number(height||1024);if(lower.includes("story")||lower.includes("stories")||lower.includes("status")){w=1080;h=1920}if(lower.includes("post")||lower.includes("instagram")){w=1080;h=1080}if(lower.includes("banner")||lower.includes("capa")){w=1400;h=800}let imageUrl=buildPollinationsUrl(userPrompt,{width:w,height:h});res.json({ok:true,type:"pollinations",prompt:userPrompt,imageUrl,message:"Imagem real gerada gratuitamente por Pollinations AI."})}catch(e){res.status(200).json({ok:false,error:e.message,message:"Não consegui gerar imagem agora."})}});
+app.post("/api/tools/image", auth, perm("imagem"), async (req, res) => {
+  try {
+    const { prompt, width, height, images } = req.body || {};
+
+    let userPrompt = String(prompt || "Crie uma imagem profissional.").trim();
+
+    if (images && images.length) {
+      userPrompt = `Crie uma nova imagem profissional baseada na imagem enviada. Pedido: ${userPrompt}. Não escreva o prompt dentro da imagem.`;
+    }
+
+    const lower = userPrompt.toLowerCase();
+
+    let w = Number(width || 1024);
+    let h = Number(height || 1024);
+
+    if (lower.includes("story") || lower.includes("stories") || lower.includes("status")) {
+      w = 1080;
+      h = 1920;
+    }
+
+    if (lower.includes("post") || lower.includes("instagram")) {
+      w = 1080;
+      h = 1080;
+    }
+
+    if (lower.includes("banner") || lower.includes("capa")) {
+      w = 1400;
+      h = 800;
+    }
+
+    const imageUrl = buildPollinationsUrl(userPrompt, { width: w, height: h });
+
+    res.json({
+      ok: true,
+      type: "pollinations",
+      prompt: userPrompt,
+      imageUrl,
+      message: "Imagem gerada gratuitamente."
+    });
+
+  } catch (e) {
+    res.status(200).json({
+      ok: false,
+      error: e.message,
+      message: "Não consegui gerar imagem agora."
+    });
+  }
+});
 
 app.post("/api/tools/video",auth,perm("video"),(req,res)=>{let{idea}=req.body||{};res.json({ok:true,content:`Roteiro de vídeo/reels OLITECH\nTema: ${idea}\nCena 1: abertura com logo.\nCena 2: mostrar problema.\nCena 3: mostrar solução técnica.\nCena 4: prova visual.\nCena 5: chamada para WhatsApp.`,message:"Vídeo real depende de API externa."})});
 app.post("/api/tools/site",auth,perm("sites"),async(req,res)=>{let{description}=req.body||{};let prompt=`Crie uma página HTML completa, responsiva e moderna para: ${description}. Entregue em um único arquivo.`;let answer=await callAI("Você é programador web especialista.",prompt,{});let file=safe("site_olitech",".html");fs.writeFileSync(path.join(EXPORTS,file),answer,"utf8");res.json({ok:true,filename:file,url:"/exports/"+file,content:answer})});
